@@ -16,9 +16,17 @@ typedef struct {
     uint8_t reserved[GLFS_BLOCK_SIZE - 6 * 8]; // Alignment padding
 } PACKED superblock_t;
 
+enum {
+    GLFS_REG = 1,
+    GLFS_DIR = 2,
+    GLFS_BLK = 3,
+    GLFS_CHR = 4,
+};
+
 typedef struct {
     char signature[8]; // "GLFS_INO" xor inode number
-    uint64_t mode;
+    uint32_t perms; // Unix permissions
+    uint32_t type; // File type
     uint64_t size; // Size of the file in bytes
     uint32_t uid; // User ID of the file owner
     uint32_t gid; // Group ID of the file owner

@@ -47,9 +47,18 @@ The bitmap is located after the superblock. It contains 1 bit per block. The bit
 An inode represents a file, directory or special file. It contains the file's metadata and its block pointers. If the inode block is full, it is expanded on one or more continuation blocks, which contain block pointers and links to the next inode blocks (next, +4, +16, +64, +256 and +1024). If a `skip_N` pointer contains a value of 0, it is invalid and should be ignored. The inode number is equal to its first block number. A directory inode contains dirents instead of file data. After being deleted, the signature of an inode must be cleared.
 
 ```c
+
+enum {
+    GLFS_FILE = 1,
+    GLFS_DIR = 2,
+    GLFS_BLOCK = 3,
+    GLFS_CHAR = 4,
+}; // File types
+
 typedef struct {
-    char signature[8]; // "GLFS_INO" xor inode number 
-    uint64_t mode;
+    char signature[8]; // "GLFS_INO" xor inode number
+    uint32_t perms; // Unix permissions
+    uint32_t type; // File type (from enum)
     uint64_t size; // Size of the file in bytes
     uint32_t uid; // User ID of the file owner
     uint32_t gid; // Group ID of the file owner

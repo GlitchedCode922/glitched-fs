@@ -91,7 +91,8 @@ int main(int argc, char *argv[]) {
     memcpy(&sig, "GLFS_INO", 8);
     sig ^= superblock.root_inode;
     memcpy(root_inode.header.signature, &sig, 8);
-    root_inode.header.mode = S_IFDIR | 0777; // Directory
+    root_inode.header.perms = 0755; // Default permissions for root directory
+    root_inode.header.type = GLFS_DIR; // Directory type
     root_inode.header.size = 0; // Empty directory
 
     root_inode.header.uid = 0; // Root user
