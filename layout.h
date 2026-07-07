@@ -55,10 +55,9 @@ typedef struct {
     uint64_t blocks[GLFS_BLOCK_SIZE / 8 - 6]; // Array of block pointers
 } PACKED inode_continuation_t;
 
-#define MAX_FILENAME_LENGTH (256 - 9) // Make dirents 256 bytes long
+#define MAX_FILENAME_LENGTH (256 - 8) // Make dirents 256 bytes long
 typedef struct {
     uint64_t inodeptr;
-    uint8_t name_length;
     char name[MAX_FILENAME_LENGTH];
 } PACKED dirent_t;
 
