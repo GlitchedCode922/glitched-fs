@@ -85,6 +85,7 @@ typedef struct {
     uint64_t skip_1024;
     uint64_t blocks[GLFS_BLOCK_SIZE / 8 - 6]; // Array of block pointers
 } PACKED inode_continuation_t;
+```
 
 ### Dirents
 
