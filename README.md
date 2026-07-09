@@ -57,7 +57,7 @@ enum {
 typedef struct {
     char signature[8]; // "GLFS_INO" xor inode number
     uint32_t perms; // Unix permissions
-    uint32_t type; // File type (from enum)
+    uint32_t type; // File type
     uint64_t size; // Size of the file in bytes
     uint32_t uid; // User ID of the file owner
     uint32_t gid; // Group ID of the file owner
@@ -67,13 +67,10 @@ typedef struct {
     uint64_t refcount; // Reference count (number of hard links)
     uint64_t next_inode_block; // Block number of the next inode block
     uint64_t rdev; // Device ID (for special files)
-    uint64_t reserved[5]; // For future use, and to pad struct to 128 bytes
+    uint64_t reserved[5]; // For future use, and to pad header to 128 bytes
     uint64_t block_count; // Number of blocks allocated to the file
-} PACKED inode_hdr_t;
-
-typedef struct {
-    inode_hdr_t header;
-    uint64_t blocks[(GLFS_BLOCK_SIZE - sizeof(inode_hdr_t)) / 8]; // Array of block pointers
+    // Header end
+    uint64_t blocks[(GLFS_BLOCK_SIZE - 128) / 8]; // Array of block pointers
 } PACKED inode_t;
 
 typedef struct {
