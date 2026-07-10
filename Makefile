@@ -1,13 +1,20 @@
 CC = gcc
+PREFIX = /usr/local
 
-all: build/mkfs build/test build/libglfs.a
+all: tools build/test build/libglfs.a
 
 build:
 	mkdir -p build
 	mkdir -p build/libglfs
 
-build/mkfs: mkfs.c | build
-	$(CC) $(CFLAGS) -o build/mkfs -Ilibglfs/include mkfs.c
+TOOLS_SOURCE = $(shell find tools -name '*.c')
+TOOLS = $(patsubst tools/%.c, build/%, $(TOOLS_SOURCE))
+TOOLS_INSTALL = $(patsubst build/%, $(PREFIX)/bin/%, $(TOOLS))
+
+tools: $(TOOLS)
+
+build/%: tools/%.c build/libglfs.a | build
+	$(CC) $(CFLAGS) -o $@ -Ilibglfs/include $^
 
 build/test: test.c | build
 	$(CC) $(CFLAGS) -o build/test -Ilibglfs/include test.c
@@ -21,9 +28,13 @@ build/libglfs.a: $(LIBGLFS_OBJECTS)
 build/libglfs/%.o: libglfs/src/%.c | build
 	$(CC) $(CFLAGS) -Ilibglfs/include -c -o $@ $<
 
-install: build/mkfs
-	@mkdir -p /usr/local/bin
-	install -m 755 build/mkfs /usr/local/bin/mkfs.glfs
+install: $(TOOLS_INSTALL)
+
+$(PREFIX)/bin/%: build/% | $(PREFIX)/bin
+	install -m 755 $< $@
+
+$(PREFIX)/bin:
+	@mkdir -p $(PREFIX)/bin
 
 clean:
 	rm -rf build

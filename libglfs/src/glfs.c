@@ -74,6 +74,80 @@ glfs_mount_t* glfs_mount(glfs_backing_t* backing, int ro) {
     return mount;
 }
 
+int glfs_mkfs(glfs_backing_t *backing, uint64_t volume_size) {
+    if (volume_size < 19 * GLFS_BLOCK_SIZE) return -EINVAL;
+    volume_size -= 16 * GLFS_BLOCK_SIZE; // Remove space for boot area
+    volume_size -= GLFS_BLOCK_SIZE; // Remove space for superblock
+    volume_size -= (volume_size % GLFS_BLOCK_SIZE); // Align to block size
+
+    uint64_t block_count = 0;
+    uint64_t bitmap_size = 0;
+    while (1) {
+        uint64_t next_block_count = block_count + 1;
+        uint64_t next_bitmap_size = (next_block_count + 7) / 8;
+        next_bitmap_size = (next_bitmap_size + GLFS_BLOCK_SIZE - 1) / GLFS_BLOCK_SIZE; // To blocks
+        uint64_t total = next_block_count + next_bitmap_size;
+        if (total * GLFS_BLOCK_SIZE > volume_size) {
+            break;
+        }
+        block_count = next_block_count;
+        bitmap_size = next_bitmap_size;
+    }
+
+    // Write superblock
+    glfs_superblock_t superblock;
+    memset(&superblock, 0, sizeof(superblock));
+    memcpy(superblock.signature, "GlitchFS", 8);
+    superblock.version = 1;
+    superblock.block_count = block_count;
+    superblock.bitmap_size = bitmap_size;
+    superblock.root_inode = 1; // Root inode number
+    superblock.next_free = 2; // Next free block after root inode
+    int res = backing->write_block(backing->data, 16, &superblock);
+    if (res < 0) return res;
+
+    // Write block bitmap (all zeros)
+    uint8_t *bitmap = backing->alloc(bitmap_size * GLFS_BLOCK_SIZE);
+    if (!bitmap) {
+        return -ENOMEM;
+    }
+
+    memset(bitmap, 0, bitmap_size * GLFS_BLOCK_SIZE);
+    bitmap[0] = 0x01; // Mark the first block as used (for the root inode)
+
+    for (int64_t i = 0; i < bitmap_size; i++) {
+        res = backing->write_block(backing->data, 17 + i, bitmap + i * GLFS_BLOCK_SIZE);
+        if (res < 0) {
+            backing->free(bitmap);
+            return res;
+        }
+    }
+    backing->free(bitmap);
+
+    // Write root inode (empty)
+    glfs_inode_t root_inode;
+    memset(&root_inode, 0, sizeof(root_inode));
+    uint64_t sig;
+    memcpy(&sig, "GLFS_INO", 8);
+    sig ^= superblock.root_inode;
+    memcpy(root_inode.signature, &sig, 8);
+    root_inode.perms = 0755; // Default permissions for root directory
+    root_inode.type = GLFS_DIR; // Directory type
+    root_inode.size = 0; // Empty directory
+
+    root_inode.uid = 0; // Root user
+    root_inode.gid = 0; // Root group
+
+    root_inode.atime = 0; // Access time
+    root_inode.mtime = 0; // Modification time
+    root_inode.ctime = 0; // Change time
+    root_inode.refcount = 1; // One reference (the root directory itself)
+
+    res = backing->write_block(backing->data, 17 + bitmap_size, &root_inode);
+    if (res < 0) return res;
+    return 0;
+}
+
 int glfs_block_alloc(glfs_mount_t* mount, uint64_t* block_number) {
     if (mount->read_only) return -EROFS;
     for (uint64_t i = mount->superblock.next_free == 0 ? 0 : mount->superblock.next_free - 1; i < mount->superblock.block_count; i++) {
