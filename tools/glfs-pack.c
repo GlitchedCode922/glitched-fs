@@ -101,7 +101,13 @@ int walk(glfs_mount_t* mount, const char* host_path, const char* glfs_path) {
                 fprintf(stderr, "Read error\n");
                 return 1;
             }
-            res = glfs_write(mount, glfs_child, buffer, 0, st.st_size);
+            uint64_t inode;
+            res = glfs_lookup(mount, glfs_child, &inode);
+            if (res < 0) {
+                fprintf(stderr, "Error: %s\n", strerror(-res));
+                return 1;
+            }
+            res = glfs_write(mount, inode, buffer, 0, st.st_size);
             if (res < 0) {
                 fprintf(stderr, "Error: %s\n", strerror(-res));
                 return 1;

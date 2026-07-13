@@ -11,3 +11,4 @@
 #define ENOSPC 28
 #define EROFS 30
 #define ENAMETOOLONG 36
+#define ENFILE 23
