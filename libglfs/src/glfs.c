@@ -444,10 +444,12 @@ int64_t glfs_write(glfs_mount_t* mount, uint64_t inode_number, const void* buffe
     }
     for (int i = 0; i < block_count; i++) {
         uint8_t block_buffer[GLFS_BLOCK_SIZE];
-        res = glfs_read_block(mount, block_pointers[i], block_buffer);
-        if (res < 0) {
-            mount->backing.free(block_pointers);
-            return res;
+        if (in_block_offset > 0 || size - bytes_written < GLFS_BLOCK_SIZE) {
+            res = glfs_read_block(mount, block_pointers[i], block_buffer);
+            if (res < 0) {
+                mount->backing.free(block_pointers);
+                return res;
+            }
         }
         for (int j = 0; j < GLFS_BLOCK_SIZE - in_block_offset && j < size - bytes_written; j++) {
             block_buffer[in_block_offset + j] = ((uint8_t*)buffer)[bytes_written + j];
