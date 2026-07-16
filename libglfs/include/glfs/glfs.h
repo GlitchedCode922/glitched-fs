@@ -19,6 +19,8 @@ typedef struct{
 typedef struct {
     uint64_t size;
     uint64_t inode;
+    uint64_t refcount;
+    uint64_t atime;
     uint64_t ctime;
     uint64_t mtime;
     uint32_t type;

@@ -2,8 +2,8 @@ CC = gcc
 HOSTCC = gcc
 PREFIX = /usr/local
 
-.PHONY: all clean install tools tests libglfs-host libglfs-target build-dir
-all: tools tests libglfs-host libglfs-target
+.PHONY: all clean install tools fuse tests libglfs-host libglfs-target build-dir
+all: tools tests libglfs-host libglfs-target fuse
 
 build-dir:
 	mkdir -p build/tools
@@ -18,6 +18,15 @@ tools: $(TOOLS)
 
 build/tools/%: tools/%.c build/host-libglfs.a | build-dir
 	$(HOSTCC) $(HOST_CFLAGS) -o $@ -Ilibglfs/include $^
+
+FUSE_SOURCE = $(shell find fuse -name '*.c')
+FUSE_CFLAGS = $(shell pkg-config fuse3 --cflags)
+FUSE_LIBS = $(shell pkg-config fuse3 --libs)
+
+fuse: build/tools/glfs-fuse
+
+build/tools/glfs-fuse: $(FUSE_SOURCE) build/host-libglfs.a | build-dir
+	$(HOSTCC) $(HOST_CFLAGS) -o $@ $(FUSE_CFLAGS) -Ilibglfs/include $^ $(FUSE_LIBS)
 
 tests: build/test
 
@@ -46,7 +55,7 @@ build/host-libglfs/%.o: libglfs/src/%.c | build-dir
 build/target-libglfs/%.o: libglfs/src/%.c | build-dir
 	$(CC) $(CFLAGS) -Ilibglfs/include -c -o $@ $<
 
-install: $(TOOLS_INSTALL) libglfs-host
+install: $(TOOLS_INSTALL) $(PREFIX)/bin/glfs-fuse libglfs-host
 	mkdir -p $(PREFIX)/lib
 	mkdir -p $(PREFIX)/include/glfs
 	install -m 755 build/host-libglfs.a build/host-libglfs.so $(PREFIX)/lib

@@ -636,9 +636,11 @@ int glfs_getattr(glfs_mount_t* mount, uint64_t inode_number, glfs_attr_t *out) {
     out->uid = inode.uid;
     out->gid = inode.gid;
     out->size = inode.size;
+    out->atime = inode.atime;
     out->ctime = inode.ctime;
     out->mtime = inode.mtime;
     out->rdev = inode.rdev;
+    out->refcount = inode.refcount;
     return 0;
 }
 
