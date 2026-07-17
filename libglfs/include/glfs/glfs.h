@@ -62,8 +62,6 @@ int64_t glfs_read(glfs_mount_t* mount, uint64_t inode_number, void* buffer, uint
 int64_t glfs_write(glfs_mount_t* mount, uint64_t inode_number, const void* buffer, uint64_t offset, uint64_t size);
 int glfs_getattr(glfs_mount_t* mount, uint64_t inode_number, glfs_attr_t* out);
 int glfs_delete(glfs_mount_t* mount, const char* path);
-int glfs_create_file(glfs_mount_t* mount, const char* path);
-int glfs_create_directory(glfs_mount_t* mount, const char* path);
 int glfs_rename(glfs_mount_t* mount, const char* old_path, const char* new_path);
 int glfs_mknod(glfs_mount_t* mount, const char* path, uint32_t type, uint64_t dev);
 int glfs_link(glfs_mount_t* mount, uint64_t inode_number, const char* link);

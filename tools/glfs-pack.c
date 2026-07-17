@@ -77,7 +77,7 @@ int walk(glfs_mount_t* mount, const char* host_path, const char* glfs_path) {
         struct stat st;
         if (stat(child, &st) < 0) continue;
         if (S_ISDIR(st.st_mode)) {
-            res = glfs_create_directory(mount, glfs_child);
+            res = glfs_mknod(mount, glfs_child, GLFS_DIR, 0);
             if (res < 0) {
                 fprintf(stderr, "Error: %s\n", strerror(-res));
                 return 1;
@@ -85,7 +85,7 @@ int walk(glfs_mount_t* mount, const char* host_path, const char* glfs_path) {
             res = walk(mount, child, glfs_child);
             if (res != 0) return res;
         } else if (S_ISREG(st.st_mode)) {
-            res = glfs_create_file(mount, glfs_child);
+            res = glfs_mknod(mount, glfs_child, GLFS_REG, 0);
             if (res < 0) {
                 fprintf(stderr, "Error: %s\n", strerror(-res));
                 return 1;

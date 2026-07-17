@@ -141,7 +141,7 @@ int glfs_fuse_write(const char* path, const char* buf, size_t size, off_t offset
 }
 
 int glfs_fuse_create(const char* path, mode_t mode, struct fuse_file_info* fi) {
-    int res = glfs_create_file(mount, path);
+    int res = glfs_mknod(mount, path, GLFS_REG, 0);
     if (res < 0) return res;
     res = glfs_lookup(mount, path, &fi->fh);
     if (res < 0) return res;
@@ -151,7 +151,7 @@ int glfs_fuse_create(const char* path, mode_t mode, struct fuse_file_info* fi) {
 }
 
 int glfs_fuse_mkdir(const char* path, mode_t mode) {
-    return glfs_create_directory(mount, path);
+    return glfs_mknod(mount, path, GLFS_DIR, 0);
 }
 
 int glfs_fuse_link(const char* from, const char* to) {

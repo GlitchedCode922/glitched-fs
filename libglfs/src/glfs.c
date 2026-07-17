@@ -757,14 +757,6 @@ int glfs_mknod(glfs_mount_t* mount, const char *path, uint32_t type, uint64_t de
     return res;
 }
 
-int glfs_create_file(glfs_mount_t* mount, const char *path) {
-    return glfs_mknod(mount, path, GLFS_REG, 0);
-}
-
-int glfs_create_directory(glfs_mount_t* mount, const char *path) {
-    return glfs_mknod(mount, path, GLFS_DIR, 0);
-}
-
 int glfs_delete(glfs_mount_t* mount, const char *path) {
     if (mount->read_only) return -EROFS;
     if (!path) return -EINVAL;
