@@ -110,7 +110,6 @@ int glfs_fuse_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t
         int res = glfs_lookup(mount, path, &handle);
         if (res < 0) return res;
     }
-    printf("path: %s, handle: %lu\n", path, handle);
     if (offset <= 0) {
         if (filler(buf, ".", NULL, 1, 0)) return 0;
         offset++;
@@ -141,7 +140,8 @@ int glfs_fuse_write(const char* path, const char* buf, size_t size, off_t offset
 }
 
 int glfs_fuse_create(const char* path, mode_t mode, struct fuse_file_info* fi) {
-    int res = glfs_mknod(mount, path, GLFS_REG, 0);
+    struct fuse_context* ctx = fuse_get_context();
+    int res = glfs_mknod(mount, path, GLFS_REG, 0, mode & ~S_IFMT & ~ctx->umask, ctx->uid, ctx->gid);
     if (res < 0) return res;
     res = glfs_lookup(mount, path, &fi->fh);
     if (res < 0) return res;
@@ -151,7 +151,8 @@ int glfs_fuse_create(const char* path, mode_t mode, struct fuse_file_info* fi) {
 }
 
 int glfs_fuse_mkdir(const char* path, mode_t mode) {
-    return glfs_mknod(mount, path, GLFS_DIR, 0);
+    struct fuse_context* ctx = fuse_get_context();
+    return glfs_mknod(mount, path, GLFS_DIR, 0, mode & ~S_IFMT & ~ctx->umask, ctx->uid, ctx->gid);
 }
 
 int glfs_fuse_link(const char* from, const char* to) {
@@ -209,7 +210,8 @@ int glfs_fuse_mknod(const char *path, mode_t mode, dev_t rdev) {
             return -EINVAL;
     }
 
-    return glfs_mknod(mount, path, type, rdev);
+    struct fuse_context* ctx = fuse_get_context();
+    return glfs_mknod(mount, path, type, rdev, mode & ~S_IFMT & ~ctx->umask, ctx->uid, ctx->gid);
 }
 
 int glfs_fuse_truncate(const char *path, off_t size, struct fuse_file_info *fi) {

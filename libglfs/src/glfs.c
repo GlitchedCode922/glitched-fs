@@ -732,7 +732,7 @@ static int _glfs_link(glfs_mount_t* mount, const char *path, uint64_t inode_numb
     return 0;
 }
 
-int glfs_mknod(glfs_mount_t* mount, const char *path, uint32_t type, uint64_t dev) {
+int glfs_mknod(glfs_mount_t* mount, const char *path, uint32_t type, uint64_t dev, uint32_t permissions, uint64_t uid, uint64_t gid) {
     if (mount->read_only) return -EROFS;
     if (!path) return -EINVAL;
     uint64_t inode_number;
@@ -744,9 +744,11 @@ int glfs_mknod(glfs_mount_t* mount, const char *path, uint32_t type, uint64_t de
     sig ^= inode_number;
     memcpy(&inode.signature, &sig, 8);
     inode.refcount = 0;
-    inode.perms = 0755;
     inode.type = type;
     inode.rdev = dev;
+    inode.perms = permissions;
+    inode.uid = uid;
+    inode.gid = gid;
     res = glfs_write_block(mount, inode_number, &inode);
     if (res < 0) {
         glfs_block_free(mount, inode_number);
